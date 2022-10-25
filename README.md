@@ -1,6 +1,6 @@
 # doyoumean
 
-A simple implementation of levenshstein algorithm for autocorrect suggestion.
+A simple implementation of levenshtein algorithm for autocorrect suggestion.
 
 ## How to use?
 
