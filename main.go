@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"math"
 	"os"
@@ -9,9 +10,11 @@ import (
 	"strings"
 )
 
+var verbose = flag.Bool("v", false, "verbose")
+
 func main() {
+	flag.Parse()
 	reader := bufio.NewReader(os.Stdin)
-	// log.Println(levenshteinDis("hello", "else"))
 	for {
 		fmt.Print("<> ")
 		wordBytes, _, _ := reader.ReadLine()
@@ -29,7 +32,9 @@ func suggestions(word string) []string {
 		return arr[i][1] < arr[j][1]
 	})
 	res := make([]string, 4)
-
+	if *verbose {
+		fmt.Println(arr[:4])
+	}
 	for i := 0; i < 4; i++ {
 		res[i] = wordlist[arr[i][0]]
 	}
