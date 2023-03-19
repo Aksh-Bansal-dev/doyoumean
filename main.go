@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/Aksh-Bansal-dev/doyoumean/internal/color"
 	"github.com/Aksh-Bansal-dev/doyoumean/internal/cursor"
 	"github.com/Aksh-Bansal-dev/doyoumean/internal/wordlist"
 )
@@ -57,6 +58,7 @@ type Result struct {
 	val   string
 	index int
 	score int
+	lcs   string
 }
 
 func suggestions(word string) []Result {
@@ -71,11 +73,14 @@ func suggestions(word string) []Result {
 	} else {
 		list = wordlist.Wordlist
 	}
+	lcsList := []string{}
 	for i, w := range list {
 		if len(*filePath) == 0 {
 			arr = append(arr, []int{i, levenshteinDis(word, w)})
 		} else {
-			arr = append(arr, []int{i, longestCommonSubsequence(word, w)})
+			lcs := longestCommonSubsequence(word, w)
+			lcsList = append(lcsList, lcs)
+			arr = append(arr, []int{i, -len(lcs)})
 		}
 	}
 	sort.Slice(arr, func(i, j int) bool {
@@ -84,7 +89,7 @@ func suggestions(word string) []Result {
 	res := []Result{}
 	for i := 0; len(res) < *resultLen && i < len(arr); i++ {
 		if len(list[arr[i][0]]) > 0 {
-			res = append(res, Result{list[arr[i][0]], arr[i][0], arr[i][1]})
+			res = append(res, Result{list[arr[i][0]], arr[i][0], arr[i][1], lcsList[arr[i][0]]})
 		}
 	}
 	return res
@@ -100,19 +105,29 @@ func printInplace(arr []Result) {
 		fmt.Print(cursor.ClearEntireLine())
 		fmt.Print(cursor.MoveLeft(200))
 		if *showScore {
-			fmt.Printf("[%d] %s\t%s\n", e.index, e.val, fadeColor(e.score))
+			fmt.Printf("[%d] %s \t%s\n", e.index, highlightCommon(e.val, e.lcs), color.FadeColor(fmt.Sprintf("%d", e.score)))
 		} else {
-			fmt.Printf("[%d] %s\n", e.index, e.val)
+			fmt.Printf("[%d] %s\n", e.index, highlightCommon(e.val, e.lcs))
 		}
 	}
 	fmt.Print(cursor.MoveUp(cnt))
 }
 
-func fadeColor(s int) string {
-	return fmt.Sprintf("\x1b[38;5;%dm%d\x1b[0m", 30, s)
+func highlightCommon(s, lcs string) string {
+	idx := 0
+	res := strings.Builder{}
+	for i := range s {
+		if idx < len(lcs) && s[i] == lcs[idx] {
+			idx++
+			res.WriteString(color.HighlightColor(string(s[i])))
+		} else {
+			res.WriteByte(s[i])
+		}
+	}
+	return res.String()
 }
 
-func longestCommonSubsequence(s1 string, s2 string) int {
+func longestCommonSubsequence(s1 string, s2 string) string {
 	n := len(s1)
 	m := len(s2)
 	dp := make([][]int, n+1)
@@ -128,7 +143,25 @@ func longestCommonSubsequence(s1 string, s2 string) int {
 			}
 		}
 	}
-	return -dp[n][m]
+
+	res := make([]byte, dp[n][m])
+	pos := dp[n][m] - 1
+	i := n
+	j := m
+	for i > 0 && j > 0 {
+		if s1[i-1] == s2[j-1] {
+			res[pos] = s1[i-1]
+			i--
+			j--
+            pos--
+		} else if dp[i-1][j] > dp[i][j-1] {
+			i--
+		} else {
+			j--
+		}
+	}
+
+	return string(res)
 }
 
 func levenshteinDis(s1 string, s2 string) int {
