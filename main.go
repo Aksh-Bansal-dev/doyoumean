@@ -77,6 +77,7 @@ func suggestions(word string) []Result {
 	for i, w := range list {
 		if len(*filePath) == 0 {
 			arr = append(arr, []int{i, levenshteinDis(word, w)})
+			lcsList = append(lcsList, "")
 		} else {
 			lcs := longestCommonSubsequence(word, w)
 			lcsList = append(lcsList, lcs)
