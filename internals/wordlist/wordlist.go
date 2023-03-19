@@ -1,6 +1,6 @@
-package main
+package wordlist
 
-var wordlist = []string{
+var Wordlist = []string{
 	"a",
 	"ability",
 	"able",

@@ -1,44 +1,113 @@
 package main
 
 import (
-	"bufio"
 	"flag"
 	"fmt"
+	"log"
 	"math"
 	"os"
+	"os/exec"
 	"sort"
 	"strings"
+
+	"github.com/Aksh-Bansal-dev/doyoumean/internals/cursor"
+	"github.com/Aksh-Bansal-dev/doyoumean/internals/wordlist"
 )
 
-var verbose = flag.Bool("v", false, "verbose")
+var (
+	verbose   = flag.Bool("v", false, "verbose")
+	resultLen = flag.Int("n", 5, "number of items in result")
+	filePath  = flag.String("f", "", "path of file to fuzzy search")
+)
 
 func main() {
 	flag.Parse()
-	reader := bufio.NewReader(os.Stdin)
+
+	// disable input buffering
+	exec.Command("stty", "-F", "/dev/tty", "cbreak", "min", "1").Run()
+	// do not display entered characters on the screen
+	exec.Command("stty", "-F", "/dev/tty", "-echo").Run()
+
+	str := strings.Builder{}
+	b := make([]byte, 1)
 	for {
-		fmt.Print("<> ")
-		wordBytes, _, _ := reader.ReadLine()
-		word := strings.Split(string(wordBytes), " ")[0]
-		fmt.Println(suggestions(word))
+		fmt.Print(cursor.ClearEntireLine())
+		fmt.Print(cursor.MoveLeft(100))
+		fmt.Print("<> ", str.String())
+		os.Stdin.Read(b)
+		if b[0] == 127 {
+			s := str.String()
+			str.Reset()
+			if len(s) > 0 {
+				str.WriteString(s[:len(s)-1])
+			} 
+            if len(str.String())==0{
+                continue
+            }
+		} else {
+			str.Write(b)
+		}
+		fmt.Print("\n")
+		printInplace(suggestions(str.String()))
+		fmt.Print(cursor.MoveUp(1))
 	}
 }
 
-func suggestions(word string) []string {
+type Result struct{
+    val string
+    index int
+}
+
+func suggestions(word string) []Result {
 	arr := [][]int{}
-	for i, w := range wordlist {
-		arr = append(arr, []int{i, levenshteinDis(word, w)})
+	var list []string
+	if len(*filePath) != 0 {
+		data, err := os.ReadFile(*filePath)
+		if err != nil {
+			log.Fatal(err)
+		}
+		list = strings.Split(string(data), "\n")
+	} else {
+		list = wordlist.Wordlist
+	}
+	for i, w := range list {
+		splitWords := strings.Split(w, " ")
+		for _, ww := range splitWords {
+			ld := levenshteinDis(word, ww)
+			if len(arr) == i {
+				arr = append(arr, []int{i, ld})
+			} else {
+				if ld < arr[i][1] {
+					arr[i][1] = ld
+				}
+			}
+		}
 	}
 	sort.Slice(arr, func(i, j int) bool {
 		return arr[i][1] < arr[j][1]
 	})
-	res := make([]string, 4)
+	res := make([]Result, *resultLen)
 	if *verbose {
-		fmt.Println(arr[:4])
+		fmt.Println(arr[:*resultLen])
 	}
-	for i := 0; i < 4; i++ {
-		res[i] = wordlist[arr[i][0]]
+	for i := 0; i < *resultLen; i++ {
+		res[i] = Result{list[arr[i][0]],arr[i][0]}
 	}
 	return res
+}
+
+func printInplace(arr []Result) {
+    cnt := 0
+	for _, e := range arr {
+        if len(e.val)==0{
+            continue
+        }
+        cnt++
+		fmt.Print(cursor.ClearEntireLine())
+		fmt.Print(cursor.MoveLeft(200))
+		fmt.Printf("[%d] %s\n",e.index, e.val)
+	}
+	fmt.Print(cursor.MoveUp(cnt))
 }
 
 func levenshteinDis(s1 string, s2 string) int {
