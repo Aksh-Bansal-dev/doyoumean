@@ -39,10 +39,10 @@ func main() {
 			str.Reset()
 			if len(s) > 0 {
 				str.WriteString(s[:len(s)-1])
-			} 
-            if len(str.String())==0{
-                continue
-            }
+			}
+			if len(str.String()) == 0 {
+				continue
+			}
 		} else {
 			str.Write(b)
 		}
@@ -52,9 +52,10 @@ func main() {
 	}
 }
 
-type Result struct{
-    val string
-    index int
+type Result struct {
+	val   string
+	index int
+	score int
 }
 
 func suggestions(word string) []Result {
@@ -70,14 +71,18 @@ func suggestions(word string) []Result {
 		list = wordlist.Wordlist
 	}
 	for i, w := range list {
-		splitWords := strings.Split(w, " ")
-		for _, ww := range splitWords {
-			ld := levenshteinDis(word, ww)
-			if len(arr) == i {
-				arr = append(arr, []int{i, ld})
-			} else {
-				if ld < arr[i][1] {
-					arr[i][1] = ld
+		if len(*filePath) == 0 {
+			arr = append(arr, []int{i, levenshteinDis(word, w)})
+		} else {
+			arr = append(arr, []int{i, 0})
+			j := 0
+			for _, ch := range w {
+				if ch == rune(word[j]) {
+					arr[i][1]--
+					j++
+                    if j==len(word){
+                        break
+                    }
 				}
 			}
 		}
@@ -85,23 +90,25 @@ func suggestions(word string) []Result {
 	sort.Slice(arr, func(i, j int) bool {
 		return arr[i][1] < arr[j][1]
 	})
-	res := make([]Result, *resultLen)
-	for i := 0; i < *resultLen; i++ {
-		res[i] = Result{list[arr[i][0]],arr[i][0]}
+	res := []Result{}
+	for i := 0; len(res) < *resultLen && i < len(arr); i++ {
+		if len(list[arr[i][0]]) > 0 {
+			res = append(res, Result{list[arr[i][0]], arr[i][0], arr[i][1]})
+		}
 	}
 	return res
 }
 
 func printInplace(arr []Result) {
-    cnt := 0
+	cnt := 0
 	for _, e := range arr {
-        if len(e.val)==0{
-            continue
-        }
-        cnt++
+		if len(e.val) == 0 {
+			continue
+		}
+		cnt++
 		fmt.Print(cursor.ClearEntireLine())
 		fmt.Print(cursor.MoveLeft(200))
-		fmt.Printf("[%d] %s\n",e.index, e.val)
+		fmt.Printf("[%d] %s \t %d\n", e.index, e.val, e.score)
 	}
 	fmt.Print(cursor.MoveUp(cnt))
 }
