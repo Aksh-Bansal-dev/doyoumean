@@ -15,7 +15,6 @@ import (
 )
 
 var (
-	verbose   = flag.Bool("v", false, "verbose")
 	resultLen = flag.Int("n", 5, "number of items in result")
 	filePath  = flag.String("f", "", "path of file to fuzzy search")
 )
@@ -87,9 +86,6 @@ func suggestions(word string) []Result {
 		return arr[i][1] < arr[j][1]
 	})
 	res := make([]Result, *resultLen)
-	if *verbose {
-		fmt.Println(arr[:*resultLen])
-	}
 	for i := 0; i < *resultLen; i++ {
 		res[i] = Result{list[arr[i][0]],arr[i][0]}
 	}
