@@ -3,6 +3,7 @@
 A CLI tool to fuzzy search any file or dictionary.
 
 It uses Longest Common Subsequence for fuzzy search and levenshtein distance algorithm for dictionary search.
+
 ![ezgif com-crop](https://user-images.githubusercontent.com/63552235/226174195-8ea8a798-75f5-4a78-a48d-50dc3da5e586.gif)
 
 ## How to use?
