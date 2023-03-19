@@ -17,7 +17,7 @@ import (
 var (
 	resultLen = flag.Int("n", 5, "number of items in result")
 	filePath  = flag.String("f", "", "path of file to fuzzy search")
-	showScore  = flag.Bool("v", false, "show score of each result")
+	showScore = flag.Bool("v", false, "show score of each result")
 )
 
 func main() {
@@ -75,7 +75,7 @@ func suggestions(word string) []Result {
 		if len(*filePath) == 0 {
 			arr = append(arr, []int{i, levenshteinDis(word, w)})
 		} else {
-			arr = append(arr, []int{i, longestCommonSubsequence(word,w)})
+			arr = append(arr, []int{i, longestCommonSubsequence(word, w)})
 		}
 	}
 	sort.Slice(arr, func(i, j int) bool {
@@ -99,36 +99,36 @@ func printInplace(arr []Result) {
 		cnt++
 		fmt.Print(cursor.ClearEntireLine())
 		fmt.Print(cursor.MoveLeft(200))
-        if *showScore{
-		    fmt.Printf("[%d] %s\t%s\n", e.index, e.val, fadeColor(e.score))
-        } else{
-		    fmt.Printf("[%d] %s\n", e.index, e.val)
-        }
+		if *showScore {
+			fmt.Printf("[%d] %s\t%s\n", e.index, e.val, fadeColor(e.score))
+		} else {
+			fmt.Printf("[%d] %s\n", e.index, e.val)
+		}
 	}
 	fmt.Print(cursor.MoveUp(cnt))
 }
 
-func fadeColor(s int)string{
-	return fmt.Sprintf("\x1b[38;5;%dm%d\x1b[0m", 30,s) 
+func fadeColor(s int) string {
+	return fmt.Sprintf("\x1b[38;5;%dm%d\x1b[0m", 30, s)
 }
 
-func longestCommonSubsequence(s1 string, s2 string) int{
-    n := len(s1)
-    m := len(s2)
-    dp := make([][]int, n+1)
-    for i:=0;i<= n;i++{
-        dp[i] = make([]int, m+1)
-    }
-    for i:=1;i<=n;i++{
-        for j:=1;j<=m;j++{
-            if s1[i-1]==s2[j-1]{
-                dp[i][j] = 1+dp[i-1][j-1]
-            } else {
-                dp[i][j] = int(math.Max(float64(dp[i-1][j]), float64(dp[i][j-1])))
-            }
-        }
-    }
-    return -dp[n][m]
+func longestCommonSubsequence(s1 string, s2 string) int {
+	n := len(s1)
+	m := len(s2)
+	dp := make([][]int, n+1)
+	for i := 0; i <= n; i++ {
+		dp[i] = make([]int, m+1)
+	}
+	for i := 1; i <= n; i++ {
+		for j := 1; j <= m; j++ {
+			if s1[i-1] == s2[j-1] {
+				dp[i][j] = 1 + dp[i-1][j-1]
+			} else {
+				dp[i][j] = int(math.Max(float64(dp[i-1][j]), float64(dp[i][j-1])))
+			}
+		}
+	}
+	return -dp[n][m]
 }
 
 func levenshteinDis(s1 string, s2 string) int {
